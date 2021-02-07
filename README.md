@@ -1,2 +1,2 @@
 # MineTurtle
-## for 
+## How to install:
