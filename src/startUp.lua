@@ -1,4 +1,16 @@
-local connectionURL = "ws://2.tcp.ngrok.io:15763"
+if not fs.exists("json") then
+    local request = http.get("https://pastebin.com/raw/4nRg9CHU")
+    local fr = fs.open("json","w")
+    fr.write(request.readAll())
+    fr.close()
+    
+end
+os.loadAPI("json")
+if os.getComputerLabel() == nil then
+    os.setComputerLabel("Unnamed Turtle")	
+end
+local ComputerName = os.getComputerLabel();
+local connectionURL = "ws://localhost:5757"
 local ws, err = http.websocket(connectionURL)
 if not ws then
     return printError(err)
@@ -9,29 +21,51 @@ while true do
     local message = ws.receive()
     if message == nil then
         ws.close()
-        print("> RECONNECTING...")
+        
         ws, err = http.websocket(connectionURL)
         if not ws then
             return printError(err)
         end
-        print("> CONNECTED")
     else
-        print(message)
-        if message == "getName" then
-            ws.send("{\"type\":\"name\",\"data\":\"Jalle\"}")
-        elseif message == "getBottomBlock" then
-            local isBlock, blockData = turtle.inspectDown()
-            ws.send(blockData)
-        elseif message == "md" then
-            turtle.digDown()
-            turtle.down()
-        else
-            local f,err = loadstring(message)
-            if err == nil then
-                local result = {f()}
+        msg = json.decode(message)
+        
+        
+        if msg.type == "SetName" then
+            os.setComputerLabel(msg.data)
+        elseif msg.type == "Dig" then
+            if msg.data == "Forward" then
+                turtle.dig()
+            elseif msg.data == "Down" then 
+                turtle.digDown()
             else
-                print(err)
+                turtle.digUp()
             end
+        elseif msg.type == "Move" then
+            print(msg.type)
+            print(msg.data)
+            if msg.data == "Forward" then
+                print(msg.type)
+                print(msg.data)
+                turtle.forward()
+            elseif msg.data == "Back" then 
+                turtle.back()
+            elseif msg.data == "Up" then 
+                turtle.up()
+            else
+                turtle.down()
+            end
+        elseif msg.type =="MultiMove" then
+            for step in json.decode(msg.data) do
+                if step == "Forward" then
+                    
+                    turtle.forward()
+                elseif step == "Back" then 
+                    turtle.back()
+                elseif step == "Up" then 
+                    turtle.up()
+                else
+                    turtle.down()
+                end
         end
     end
 end

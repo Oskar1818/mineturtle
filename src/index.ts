@@ -1,5 +1,6 @@
 import {Server} from 'ws';
 import * as readline from 'readline';
+import { stringify } from 'querystring';
 
 const wss = new Server({port: 5757});
 let rl = readline.createInterface({
@@ -24,52 +25,45 @@ wss.on('connection', function connection(ws) {
 
 
 MultiInputHandler();
-
+class  PayLoad{
+    data:any;
+    type:string;
+}
 function MultiInputHandler(){
     rl.question("Enter command or Exit ", function(answer) {
         
+        let payload = new PayLoad();
+
         
-        
-        
-        switch(answer) {
-            
+        switch (answer) {
             case 'exit':
                 rl.close();
-                
-              break;
+                break;
             case 'w':
-                wbskts.forEach(element => {
-                element.send("turtle.forward()");
-                });
+                payload.type = "Move";
+                payload.data = "Forward";           
+            case "x":
+                payload.type ="MultiMove";
+                payload.data = 
+                    {steps:[
+                        "Forward",
+                        "Forward",
+                        "Up", 
+                        "Back",
+                        "Down",
+                        "Up", 
+                        "Forward",
+                        "Forward",
+                        "Up"
+                    ]}
+         
             
-            case 'a':
-                wbskts.forEach(element => {
-                element.send("turtle.turnLeft()");});
-            case 'd':
-                wbskts.forEach(element => {
-                element.send("turtle.turnRight()");});
-            case 'q':
-                wbskts.forEach(element => {
-                element.send("turtle.dig()");});
-            case 'e':
-                wbskts.forEach(element => {
-                element.send("md");});
-            case 's':
-                wbskts.forEach(element => {
-                element.send("turtle.digUp()");});
-            case 'c':
-                wbskts.forEach(element => {
-                element.send("turtle.down()");});
-            case 'u':
-                wbskts.forEach(element => {
-                element.send("turtle.up()");});
-            default:
-                wbskts.forEach(element => {
-                element.send(answer);
-            });
+            
         }
-    
-        
+        console.log("Sending %s",JSON.stringify(payload) )
+        wbskts.forEach(function (element) {
+            element.send(JSON.stringify(payload));
+        });
         MultiInputHandler();
   
     });
